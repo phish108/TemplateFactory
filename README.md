@@ -23,8 +23,10 @@ API as for templates.
 
 Example Use
 -----------
+The following code demonstrate the basic use of this module.
 
-```html index.html
+
+```html
 <!DOCTYPE html>
 <html>
 <body>
@@ -42,7 +44,9 @@ Example Use
 </html>
 ```
 
-```javascript myscript.js
+The following lines include the logic of your script.
+
+```javascript
 var templates = new TemplateFactory();
 
 var myClients = [{cn: 'john-doe', firstname: "John", lastname: "Doe"},
@@ -95,8 +99,7 @@ if(myTmpl.find('john-doe')) {
 If you prefer to put your templates elsewhere in the code you can also do that.
 The following example achieves the same result as the first example.
 
-
-```html index.html
+```html
 <!DOCTYPE html>
 <html>
 <body>
@@ -113,7 +116,7 @@ The following example achieves the same result as the first example.
 </html>
 ```
 
-```javascript myscript2.js
+```javascript
 var templates = new TemplateFactory();
 
 var myClients = [{cn: 'john-doe', firstname: "John", lastname: "Doe"},
@@ -136,3 +139,12 @@ for (var i = 0; i < myClients.length; i++) {
 }
 ```
 
+License
+=======
+
+Template Factory is open source under the MIT LICENSE.
+
+Contributor
+===========
+
+Christian Glahn at Mobinaut.io
