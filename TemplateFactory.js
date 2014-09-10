@@ -1,7 +1,7 @@
 /* jslint white: true, vars: true, sloppy: true, devel: true, plusplus: true, browser: true */
 
 /**
- * @class TmplFactory()
+ * ## Template Factory
  *
  * Factory Class for creating HTML template objects that can be reused in views.
  *
@@ -23,6 +23,11 @@
  *
  * The component is only present for abstracting the UI static elements using the same API
  * as for templates.
+ *
+ * @class TemplateFactory
+ * @constructor
+ * @uses ComponentBlock
+ * @uses ComponentVar
  */
 function TemplateFactory() {
     this.templates = {};
@@ -36,6 +41,16 @@ function TemplateFactory() {
         }
     }
 
+    /**
+     * ### ComponentBlock
+     *
+     * @class ComponentBlock
+     * @for TemplateFactory
+     * @uses ComponentVar
+     * @constructor
+     * @param {HTMLElement} tag - a template or component element
+     *
+     */
     function ComponentBlock(tag) {
         // var tagid = tag.id.replace(/[\s\-]+/g, ''); // remove forbidden characters for dot-notation
 
@@ -96,7 +111,12 @@ function TemplateFactory() {
         }
     }
 
-     Object.defineProperties(ComponentBlock.prototype, {
+    Object.defineProperties(ComponentBlock.prototype, {
+        /**
+         * the identifier of the individual element. _Note_: setting may create new entries
+         *
+         * @property {String} id
+         */
          'id' : {
              'get' : function () { return this.currentElementId; },
              'set' : function (value) {
@@ -111,9 +131,20 @@ function TemplateFactory() {
                  }
              }
          },
+        /**
+         * The ID of the template
+         *
+         * @property {String} name
+         * @readOnly
+         */
          'name': {
              'get' : function () { return this.prefixid; }
          },
+        /**
+         *  the target element for inserting new entries of the template
+         *
+         * @property {HTMLElement} target
+         */
          'target': {
              'get' :  function () {
                  return this.getTargetElement();
@@ -122,6 +153,12 @@ function TemplateFactory() {
                  this.setTargetElement(node);
              }
          },
+        /**
+         * list of elements at the root level of the template
+         *
+         * @property {Array} root
+         * @readOnly
+         */
          'root': {
              'get' : function () {
                  var rv = [];
@@ -139,6 +176,10 @@ function TemplateFactory() {
          }
     });
 
+    /**
+     * @method prefix
+     * @returns {String} - prefix id that for uniquely identifying the generated elements
+     */
     ComponentBlock.prototype.prefix = function () {
         if (this.bTemplate) {
             return  '_' + this.prefixid + '_' + this.currentElementId;
@@ -146,12 +187,25 @@ function TemplateFactory() {
         return '';
     };
 
+    /**
+     * Create and insert a new carbon copy of the template to the target element
+     *
+     * @method attach
+     * @param {String} objectid - the (non-prefixed) id of the newly gerenated template object
+     */
     ComponentBlock.prototype.attach = function (objectid) {
         if (this.bTemplate) {
             this.appendTo(document.getElementById(this.targetid), objectid);
         }
     };
 
+    /**
+     * Remove forbidden characters from the objectid
+     *
+     * @method flattenObjectId
+     * @private
+     * @param {String} objectid - the (non-prefixed) id of the newly gerenated template object
+     */
     function flattenObjectId(objectid) {
         // forbidden css selectors
         // !, ", #, $, %, &, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \, ], ^, `, {, |, }, and ~.
@@ -159,6 +213,11 @@ function TemplateFactory() {
         return objectid;
     }
 
+    /**
+     * @method appendTo
+     * @param {HTMLElement} node - the target element (parent) for inserting the newly generated template object
+     * @param {String} objectid - the (non-prefixed) id of the newly gerenated template object
+     */
     ComponentBlock.prototype.appendTo = function (node, objectid) {
         if (this.bTemplate && node && node.nodeType === Node.ELEMENT_NODE) {
             var df = this.templateCode.cloneNode(true);
@@ -174,6 +233,11 @@ function TemplateFactory() {
         }
     };
 
+    /**
+     * compute a definitely unique object id for new elements
+     *
+     * @method calculateObjectID
+     */
     ComponentBlock.prototype.calculateObjectID = function () {
         var cI = this.currentElementId || '';
         if (!cI.length || this.find(cI)) {
@@ -183,6 +247,12 @@ function TemplateFactory() {
         }
     };
 
+    /**
+     * Process the template's root id's and replace them with their uinque counterparts.
+     *
+     * @method initRootElements
+     * @param {HTMLDocumentFragment} frag - the template fragment
+     */
     ComponentBlock.prototype.initRootElements = function (frag) {
         var j = 0;
         for (var i = 0; i < frag.childNodes.length; i++) {
@@ -195,6 +265,13 @@ function TemplateFactory() {
         }
     };
 
+
+    /**
+     * Process the template's element id's and replace them with their uinque counterparts.
+     *
+     * @method initVariables
+     * @param {HTMLDocumentFragment} frag - the template fragment
+     */
     ComponentBlock.prototype.initVariables = function (frag) {
         this.variables.forEach(function (e) {
             // var el = frag.getElementById(e); // fails on older webkit engines
@@ -202,6 +279,12 @@ function TemplateFactory() {
         }, this);
     };
 
+    /**
+     * find fragments that are based on the given template.
+     *
+     * @method find
+     * @param {String} objectid - The (non-prefixed) id of the requested entry
+     */
     ComponentBlock.prototype.find = function (objectid) {
         var le;
         if (objectid && this.variables.length) {
@@ -217,6 +300,17 @@ function TemplateFactory() {
         return (le && le.length);
     };
 
+    /**
+     * ### ComponentVar
+     *
+     * Helper accessor class for manipulating the variables in ComponentBlock objects
+     *
+     * @class ComponentVar
+     * @for ComponentBlock
+     * @constructor
+     * @param {HTMLElement} tag
+     * @param {ComponentBlock} block
+     */
     function ComponentVar(tag, cBlock) {
         this.block = cBlock;
         this.id = tag.id;
@@ -236,6 +330,11 @@ function TemplateFactory() {
 
         // check for special attributes
         if ('src' in tag) {
+            /**
+             * manipulates the src attribute of the variable element if it is present
+             *
+             * @property {URLString} src
+             */
             Object.defineProperty(this,
                                   'src',
                                   {
@@ -244,6 +343,11 @@ function TemplateFactory() {
                                   });
         }
         if ('href' in tag) {
+            /**
+             * manipulates the href attribute of the variable element if it is present
+             *
+             * @property {URLString} href
+             */
             Object.defineProperty(this,
                                   'href',
                                   {
@@ -252,6 +356,11 @@ function TemplateFactory() {
                                   });
         }
         if ('title' in tag) {
+            /**
+             * manipulates the title attribute of the variable element if it is present
+             *
+             * @property {String} title
+             */
             Object.defineProperty(this,
                                   'title',
                                   {
@@ -260,6 +369,11 @@ function TemplateFactory() {
                                   });
         }
         if ('alt' in tag) {
+            /**
+             * manipulates the alt attribute of the variable element if it is present
+             *
+             * @property {String} alt
+             */
             Object.defineProperty(this,
                                   'alt',
                                   {
@@ -270,22 +384,47 @@ function TemplateFactory() {
     }
 
     Object.defineProperties(ComponentVar.prototype, {
+        /**
+         * manipulates the text-content and value attribute of the variable element
+         *
+         * @property {String} text
+         */
         'text': {
             'get': function () { return this.get(); },
             'set': function (value) { this.set(value); }
         },
+        /**
+         * manipulates the text-content and value attribute of the variable element
+         *
+         * @property {String} value
+         */
         'value': {
             'get': function () { return this.get(); },
             'set': function (value) { this.set(value); }
         },
+        /**
+         * manipulates the html-content of the variable element
+         *
+         * @property {HTMLString} html
+         */
         'html': {
             'get': function () { return this.getHTML(); },
             'set': function (value) { this.setHTML(value); }
         },
+        /**
+         * trigger boolean css classes through choose() and which()
+         *
+         * @property {boolean} is
+         */
         'is': {
             'get': function () { return this.which(); },
             'set': function (value) { this.choose(value); }
         },
+        /**
+         *  the HTML element of the variable element
+         * @property {HTMLElement} target
+         * @readOnly
+         */
         'target': {
             'get': function () {
                 // here is some potential for optimizing DOM processing
@@ -294,6 +433,12 @@ function TemplateFactory() {
         }
     });
 
+    /**
+     * manipulates the text-content and value attribute of the variable element
+     *
+     * @method set
+     * @param {String} data
+     */
     ComponentVar.prototype.set = function (data) {
         this.target.textContent = data;
         //console.log(typeof this.target.value);
@@ -303,10 +448,19 @@ function TemplateFactory() {
         //}
     };
 
+    /**
+     * @method setHTML
+     * @param {HTMLString} data
+     */
     ComponentVar.prototype.setHTML = function (data) {
         this.target.innerHTML = data;
     };
 
+    /**
+     * Remove all data from the text-content and/or the value attribute
+     *
+     * @method clear
+     */
     ComponentVar.prototype.clear = function () {
         this.target.textContent = '';
         if (this.target.value) {
@@ -314,14 +468,33 @@ function TemplateFactory() {
         }
     };
 
+    /**
+     * Accessor for the text-content or value attribute. If the value attribute is present it is always selected
+     *
+     * @method get
+     * @return {String} - the text content of the variable element
+     */
     ComponentVar.prototype.get = function () {
         return this.target.value ? this.target.value : this.target.textContent;
     };
 
+    /**
+     * Accessor for the HTML content of the variable element
+     *
+     * @method getHTML
+     * @return {HTMLString} - the HTML Content
+     */
     ComponentVar.prototype.getHTML = function () {
         return this.target.innerHTML;
     };
 
+    /**
+     * Set the css class of the variable element. multiple classes can get set if they are separated by spaces or
+     * if they get passed as an Array.
+     *
+     * @method setClass
+     * @param {String} classname
+     */
     ComponentVar.prototype.setClass = function (classname) {
         var clst;
         var t = this.target;
@@ -336,8 +509,22 @@ function TemplateFactory() {
         }
     };
 
+    /**
+     * Alias for setClass()
+     *
+     * @method addClass
+     * @param {Mixed} classname
+     */
     ComponentVar.prototype.addClass = ComponentVar.prototype.setClass;
 
+    /**
+     * Remove one or more classnames from the target element
+     * multiple classnames can get removed in one go if they get pass in a
+     * whitespace separated string or as an Array
+     *
+     * @method removeClass
+     * @param {Mixed} classname
+     */
     ComponentVar.prototype.removeClass = function (classname) {
         var clst;
         var t = this.target;
@@ -352,6 +539,11 @@ function TemplateFactory() {
         }
     };
 
+    /**
+     * Remove all CSS classes from the variable element
+     *
+     * @method clearClass
+     */
     ComponentVar.prototype.clearClass = function () {
         // brute force removal of all classes
         this.target.className = '';
@@ -363,6 +555,9 @@ function TemplateFactory() {
      * Given that the current target has only the 'foo' and the 'bar' classes set
      * then hasClass('foo bar') will return true, but hasClass('foo bar baz') returns false.
      * Testing for each class independently, will return true for each class set.
+     *
+     * @method hasClass
+     * @param {Mixed} classname
      */
     ComponentVar.prototype.hasClass = function (classname) {
         var clst;
@@ -385,6 +580,9 @@ function TemplateFactory() {
      * toggleClass() toggles one or more classes. Note that each class is toggled independently.
      * Given that the target element has class 'foo' already set the call toggleClass('foo bar')
      * will remove 'foo' and add 'bar'.
+     *
+     * @method toggleClass
+     * @param {Mixed} classname
      */
     ComponentVar.prototype.toggleClass = function (classname) {
         var clst;
@@ -400,20 +598,46 @@ function TemplateFactory() {
         }
     };
 
+    /**
+     * @method setAttribute
+     * @param {String} attributename
+     * @param {String} attributevalue
+     */
     ComponentVar.prototype.setAttribute = function (attrname, attrvalue) {
         this.target.setAttribute(attrname, attrvalue);
     };
 
+    /**
+     * @method clearAttribute
+     * @param {String} attributeName
+     */
     ComponentVar.prototype.clearAttribute = function (attrname) {
         this.target.removeAttribute(attrname);
     };
 
+    /**
+     * Alias for clearAttribute()
+     *
+     * @method removeAttribute
+     * @param {String} attributeName
+     */
     ComponentVar.prototype.removeAttribute = ComponentVar.prototype.clearAttribute;
 
+    /**
+     * @method getAttribute
+     * @param {String} atttributeName
+     */
     ComponentVar.prototype.getAttribute = function (attrname) {
         return this.target.getAttribute(attrname);
     };
 
+    /**
+     * Choose between "data-trueclass" and "data-falseclass" CSS definitions. True values will
+     * activate the trueclass in the variable element. False values will activate the falseclass.
+     *
+     * @method choose
+     * @param {Boolean} bValue
+     */
     ComponentVar.prototype.choose = function (bValue) {
         if (this.boolClass) {
             var add = bValue ? 'true' : 'false';
@@ -430,27 +654,32 @@ function TemplateFactory() {
         }
     };
 
+    /**
+     * @method which
+     * @return {Boolean} - true if trueclass is set and false if falseclass is set.
+     */
     ComponentVar.prototype.which = function () {
         return (this.boolClass && (this.hasClass(this.boolClass.true) || !this.hasClass(this.boolClass.false)));
     };
 }
 
 /**
- * @public @method getTemplate(name)
- *
- * @param @String name: name of the template as given in its id.
- *
  * returns a template class or undefined
+ *
+ * @method getTemplate
+ * @param {String} name - name of the template as given in its id.
+ * @return {ComponentBlock} - the template component with the specified name as ID
  */
 TemplateFactory.prototype.getTemplate = function (name) {
     return this.templates[name];
 };
 
 /**
- * @public @method getTargetTemplate(targetid)
- * @param @string targetid
- *
  * returns all templates that are associated with a targetid.
+ *
+ * @method getTargetTemplate
+ * @param @string targetid
+ * @return {Mixed} - template or template array that are defined under the element with the given id.
  */
 TemplateFactory.prototype.getTargetTemplate = function (targetid) {
     var result = {};
