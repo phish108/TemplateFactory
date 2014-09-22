@@ -71,7 +71,6 @@ function TemplateFactory() {
 
         if(tag.parentElement.localName.toLowerCase === 'tbody') {
             this.targetid = tag.parentNode.parentNode.id || '';
-
         }
 
         if (this.targetid && this.targetid.length){
