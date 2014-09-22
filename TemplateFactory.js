@@ -68,6 +68,12 @@ function TemplateFactory() {
         };
 
         this.targetid = tag.parentNode.id || '';
+
+        if(tag.parentElement.localName.toLowerCase === 'tbody') {
+            this.targetid = tag.parentNode.parentNode.id || '';
+
+        }
+
         if (this.targetid && this.targetid.length){
             this.setTargetElement(tag.parentNode);
         }
