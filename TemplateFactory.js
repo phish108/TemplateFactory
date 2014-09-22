@@ -69,7 +69,7 @@ function TemplateFactory() {
 
         this.targetid = tag.parentNode.id || '';
 
-        if(tag.parentElement.localName.toLowerCase === 'tbody') {
+        if(tag.parentElement.localName.toLowerCase() === 'tbody') {
             this.targetid = tag.parentNode.parentNode.id || '';
         }
 
