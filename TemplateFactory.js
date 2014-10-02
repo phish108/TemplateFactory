@@ -264,7 +264,7 @@ function TemplateFactory() {
             var e = frag.childNodes[i];
             if (e.nodeType === Node.ELEMENT_NODE &&
                 !(e.id && e.id.length)) {
-                e.id = j + this.prefix();
+                e.id = 'hi' + j + this.prefix();
                 j++;
             }
         }
