@@ -239,7 +239,7 @@ function TemplateFactory() {
     };
 
     /**
-     * compute a definitely unique object id for new elements
+     * compute a unique object id for new elements
      *
      * @method calculateObjectID
      */
