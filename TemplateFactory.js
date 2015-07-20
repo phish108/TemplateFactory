@@ -1,4 +1,5 @@
-/* jslint white: true, vars: true, sloppy: true, devel: true, plusplus: true, browser: true */
+/*jslint white: true, vars: true, sloppy: true, devel: true, plusplus: true, browser: true */
+/*global Node*/
 
 /**
  * ## Template Factory
@@ -32,13 +33,19 @@
 function TemplateFactory() {
     this.templates = {};
 
-    var nodes = document.querySelectorAll('template, component');
-    for (var i = 0; i < nodes.length; i++) {
-        var id = nodes[i].getAttribute('id');
-        id = id.replace(/[\s_\-]+/g, ''); // remove bad characters from the string
-        if(id && id.length) {
-            this.templates[id] = new ComponentBlock(nodes[i]);
-        }
+    /**
+     * ### ComponentVar
+     *
+     * Helper accessor class for manipulating the variables in ComponentBlock objects
+     *
+     * @class ComponentVar
+     * @for ComponentBlock
+     * @constructor
+     * @param {HTMLElement} tag
+     * @param {ComponentBlock} block
+     */
+    function ComponentVar(tag, cBlock) {
+        this.init(tag,cBlock);
     }
 
     /**
@@ -60,8 +67,9 @@ function TemplateFactory() {
 
         var targetElement = null;
         this.setTargetElement = function (node) {
-            if (node && node.nodeType === Node.ELEMENT_NODE)
+            if (node && node.nodeType === Node.ELEMENT_NODE) {
                 targetElement = node;
+            }
         };
         this.getTargetElement = function () {
             return targetElement;
@@ -93,10 +101,10 @@ function TemplateFactory() {
 
         // create component variables
         this.variables = [];
-        var thevars = cFrag.querySelectorAll('[id]'); // all elements that have an id in the component
+        var varid, thevars = cFrag.querySelectorAll('[id]'); // all elements that have an id in the component
 
         for (i = 0; i < thevars.length; i++) {
-            var varid = thevars[i].id;
+            varid = thevars[i].id;
             this.variables.push(varid);
             this[varid] = new ComponentVar(thevars[i], this);
         }
@@ -126,7 +134,7 @@ function TemplateFactory() {
              'get' : function () { return this.currentElementId; },
              'set' : function (value) {
                  // unset the active element if undefined, null, or empty strings are passed
-                 if (typeof value !== 'undefined' && value !== null && value.length) {
+                 if (value !== 'undefined' && value !== null && value.length) {
                      if (!this.find(value)) {
                         this.attach(value);
                      }
@@ -168,11 +176,12 @@ function TemplateFactory() {
              'get' : function () {
                  var rv = [];
                  if (this.currentElementId) {
-                     var t = this.target;
-                     var p = this.prefix();
-                     var le = t.querySelectorAll('#' + this.targetid + ' > [id $= ' + p + ']');
+                     var i,
+                         t = this.target,
+                         p = this.prefix(),
+                         le = t.querySelectorAll('#' + this.targetid + ' > [id $= ' + p + ']');
                      // now we have all elements
-                     for (var i = 0; i < le.length; i++) {
+                     for (i = 0; i < le.length; i++) {
                         rv.push(le[i]);
                      }
                  }
@@ -214,7 +223,7 @@ function TemplateFactory() {
     function flattenObjectId(objectid) {
         // forbidden css selectors
         // !, ", #, $, %, &, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \, ], ^, `, {, |, }, and ~.
-        objectid = objectid.replace(/[\!\"\'\#\$\^\<\>\=\?\*\.\/\\\]\[\{\}\`\~\%\&\-\(\)\+\s\,\:\;\@\|]+/g, '');
+        objectid = objectid.replace(/[\!\"\'\#\$\^<>\=\?\*\.\/\\\]\[\{\}\`\~\%\&\-\(\)\+\s\,\:\;\@\|]+/g, '');
         return objectid;
     }
 
@@ -234,7 +243,7 @@ function TemplateFactory() {
             this.initVariables(df);
 
             node.appendChild(df);
-            this._targetElement = node;
+            this.setTargetElement(node);
         }
     };
 
@@ -247,7 +256,7 @@ function TemplateFactory() {
         var cI = this.currentElementId || '';
         if (!cI.length || this.find(cI)) {
             var i = 0;
-            for (i; this.find(cI + i); i++);
+            for (i; this.find(cI + i); i++) {}
             this.currentElementId = cI + i;
         }
     };
@@ -259,9 +268,9 @@ function TemplateFactory() {
      * @param {HTMLDocumentFragment} frag - the template fragment
      */
     ComponentBlock.prototype.initRootElements = function (frag) {
-        var j = 0;
-        for (var i = 0; i < frag.childNodes.length; i++) {
-            var e = frag.childNodes[i];
+        var e, i,j = 0;
+        for (i = 0; i < frag.childNodes.length; i++) {
+            e = frag.childNodes[i];
             if (e.nodeType === Node.ELEMENT_NODE &&
                 !(e.id && e.id.length)) {
                 e.id = 'hi' + j + this.prefix();
@@ -305,18 +314,7 @@ function TemplateFactory() {
         return (le && le.length);
     };
 
-    /**
-     * ### ComponentVar
-     *
-     * Helper accessor class for manipulating the variables in ComponentBlock objects
-     *
-     * @class ComponentVar
-     * @for ComponentBlock
-     * @constructor
-     * @param {HTMLElement} tag
-     * @param {ComponentBlock} block
-     */
-    function ComponentVar(tag, cBlock) {
+    ComponentVar.prototype.init = function (tag, cBlock) {
         this.block = cBlock;
         this.id = tag.id;
 
@@ -386,7 +384,7 @@ function TemplateFactory() {
                                       set: function(value) {tag.alt = value || "";}
                                   });
         }
-    }
+    };
 
     Object.defineProperties(ComponentVar.prototype, {
         /**
@@ -480,7 +478,7 @@ function TemplateFactory() {
      * @return {String} - the text content of the variable element
      */
     ComponentVar.prototype.get = function () {
-        return this.target.value ? this.target.value : this.target.textContent;
+        return this.target.value || this.target.textContent;
     };
 
     /**
@@ -501,15 +499,14 @@ function TemplateFactory() {
      * @param {String} classname
      */
     ComponentVar.prototype.setClass = function (classname) {
-        var clst;
-        var t = this.target;
+        var i = 0, clst = [], t = this.target;
         if (typeof classname === 'string') {
             clst = classname.split(' ');
         }
         if (Array.isArray(classname)) {
             clst = classname;
         }
-        for (var i in clst) {
+        for (i = 0; i < clst.length; i++) {
             t.classList.add(clst[i]);
         }
     };
@@ -531,15 +528,14 @@ function TemplateFactory() {
      * @param {Mixed} classname
      */
     ComponentVar.prototype.removeClass = function (classname) {
-        var clst;
-        var t = this.target;
+        var i, clst, t = this.target;
         if (typeof classname === 'string') {
             clst = classname.split(' ');
         }
         if (Array.isArray(classname)) {
             clst = classname;
         }
-        for (var i in clst) {
+        for (i = 0; i < clst.length; i++) {
             t.classList.remove(clst[i]);
         }
     };
@@ -565,7 +561,7 @@ function TemplateFactory() {
      * @param {Mixed} classname
      */
     ComponentVar.prototype.hasClass = function (classname) {
-        var clst;
+        var i, clst = [];
         var t = this.target;
         if (typeof classname === 'string') {
             clst = classname.split(' ');
@@ -573,7 +569,10 @@ function TemplateFactory() {
         if (Array.isArray(classname)) {
             clst = classname;
         }
-        for (var i in clst) {
+        if (!clst.length) {
+            return false;
+        }
+        for (i = 0; i < clst.length; i++) {
             if (!t.classList.contains(clst[i])) {
                 return false;
             }
@@ -590,7 +589,7 @@ function TemplateFactory() {
      * @param {Mixed} classname
      */
     ComponentVar.prototype.toggleClass = function (classname) {
-        var clst;
+        var i, clst;
         var t = this.target;
         if (typeof classname === 'string') {
             clst = classname.split(' ');
@@ -598,7 +597,7 @@ function TemplateFactory() {
         if (Array.isArray(classname)) {
             clst = classname;
         }
-        for (var i in clst) {
+        for (i = 0; i < clst.length; i++) {
             t.classList.toggle(clst[i]);
         }
     };
@@ -666,6 +665,15 @@ function TemplateFactory() {
     ComponentVar.prototype.which = function () {
         return (this.boolClass && (this.hasClass(this.boolClass.true) || !this.hasClass(this.boolClass.false)));
     };
+
+    var i, id, nodes = document.querySelectorAll('template, component');
+    for (i = 0; i < nodes.length; i++) {
+        id = nodes[i].getAttribute('id');
+        id = id.replace(/[\s_\-]+/g, ''); // remove bad characters from the string
+        if(id && id.length) {
+            this.templates[id] = new ComponentBlock(nodes[i]);
+        }
+    }
 }
 
 /**
@@ -690,7 +698,7 @@ TemplateFactory.prototype.getTargetTemplate = function (targetid) {
     var result = {};
     var k;
     for (k in this.templates) {
-        if (this.templates[k].targetid === targetid) {
+        if (this.templates.hasOwnProperty(k) && this.templates[k].targetid === targetid) {
             result[k] = this.templates[k];
         }
     }
