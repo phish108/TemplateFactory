@@ -92,11 +92,15 @@ function TemplateFactory() {
         if(tag.content) { // HTML5 Template capable
             cFrag = tag.content;
         }
-        else {            // Polyfill for components and non template capable browsers
+        else if (tag.nodeName.toLowerCase() === 'template' ||
+                 tag.nodeName.toLowerCase() === 'component') {            // Polyfill for components and non template capable browsers
             cFrag = document.createDocumentFragment();
             for (i = 0; i < tag.childNodes.length; i) {
                 cFrag.appendChild(tag.childNodes[i]);
             }
+        }
+        else {
+            cFrag = tag;
         }
 
         // create component variables
@@ -117,7 +121,7 @@ function TemplateFactory() {
             }
             this.templateCode = cFrag;
         }
-        else {
+        else if (tag.nodeName.toLowerCase() === 'component') {
             // remove the component element from the DOM flow
             // this makes components truely invisible from the layout
             tag.parentNode.replaceChild(cFrag, tag);
@@ -256,7 +260,9 @@ function TemplateFactory() {
         var cI = this.currentElementId || '';
         if (!cI.length || this.find(cI)) {
             var i = 0;
-            for (i; this.find(cI + i); i++) {}
+            while (this.find(cI + i)) {
+                i++;
+            }
             this.currentElementId = cI + i;
         }
     };
@@ -674,6 +680,21 @@ function TemplateFactory() {
             this.templates[id] = new ComponentBlock(nodes[i]);
         }
     }
+
+    /**
+     * returns a new component template for an arbitary DOM elemetn
+     *
+     * @method makeComponent
+     * @param {Element} element
+     *
+     * creates a component block template for arbitary DOM elements.
+     */
+    this.makeComponent = function (element) {
+        if (element && element.nodeType === Node.ELEMENT_NODE) {
+            return new ComponentBlock(element);
+        }
+        return undefined;
+    };
 }
 
 /**
