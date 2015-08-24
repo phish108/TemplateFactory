@@ -1,5 +1,5 @@
-Template Factory
-================
+Templer - A JavaScript Framework For HTML5 Templates
+====================================================
 
 A wrapper class for using [HTML5 templates](http://www.html5rocks.com/en/tutorials/webcomponents/template/)
 more effectively
