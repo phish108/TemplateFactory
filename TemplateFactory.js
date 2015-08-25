@@ -225,6 +225,17 @@ function TemplateFactory() {
      * @param {String} objectid - the (non-prefixed) id of the newly gerenated template object
      */
     function flattenObjectId(objectid) {
+        if (objectid !== undefined &&
+            typeof objectid !== "string" &&
+            objectid.toString) {
+            objectid = objectid.toString();
+        }
+
+        if (typeof objectid !== "string") {
+            // fatal error no cast possible
+            throw "ERR_NO_CAST_POSSIBLE";
+        }
+
         // forbidden css selectors
         // !, ", #, $, %, &, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \, ], ^, `, {, |, }, and ~.
         objectid = objectid.replace(/[\!\"\'\#\$\^<>\=\?\*\.\/\\\]\[\{\}\`\~\%\&\-\(\)\+\s\,\:\;\@\|]+/g, '');
