@@ -716,7 +716,9 @@ function TemplateFactory() {
  * @return {ComponentBlock} - the template component with the specified name as ID
  */
 TemplateFactory.prototype.getTemplate = function (name) {
-    return this.templates[name];
+    if (typeof name === "string" && name.length)
+        return this.templates[name];
+    return undefined;
 };
 
 /**
